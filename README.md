@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FuelWise — Gestão de Combustível para Frotas
 
-## Getting Started
+MVP de uma plataforma SaaS de controle de combustível para pequenas e médias
+frotas. O motorista registra cada abastecimento pelo celular; o gestor acompanha
+consumo, custos e **alertas inteligentes** de inconsistência em um dashboard.
 
-First, run the development server:
+## Funcionalidades do MVP
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **App do motorista** (`/abastecimento`): registro de km, data/hora, litros,
+  valor pago e posto, com cálculo do preço por litro em tempo real.
+- **Dashboard do gestor** (`/dashboard`): KPIs da frota, gráfico de consumo
+  (km/L) por veículo, gasto por veículo e tabela de desempenho.
+- **Gestão de veículos** (`/veiculos`): cadastro de placa, modelo e capacidade
+  do tanque.
+- **Histórico** (`/abastecimentos`): todos os abastecimentos com filtro por
+  veículo e métricas calculadas (R$/L, km/L).
+- **Motor de alertas**: detecta automaticamente
+  - quilometragem regressiva/inconsistente,
+  - litros acima da capacidade do tanque,
+  - preço por litro fora da faixa plausível,
+  - consumo (km/L) fora do padrão histórico do veículo.
+
+## Arquitetura
+
+- **Next.js 15 (App Router) + React 19 + TypeScript**
+- **Tailwind CSS v4 + shadcn/ui** para a interface
+- **Recharts** para os gráficos
+- **Supabase** para autenticação e persistência (opcional)
+- **Camada de dados** (`src/lib/fuelwise`): usa Supabase quando configurado e
+  cai para **localStorage (modo demo)** caso contrário — o app funciona sem
+  backend para testes rápidos.
+
+```
+src/lib/fuelwise/
+  types.ts       # tipos do domínio (Vehicle, FuelEntry, Alert, ...)
+  analytics.ts   # cálculo de km/L, R$/km e motor de alertas (puro)
+  store.ts       # persistência (Supabase + fallback localStorage)
+  format.ts      # formatação pt-BR (R$, datas, km/L)
+src/components/fuelwise/
+  AppShell.tsx   # navegação + alternador gestor/motorista
+  AlertsPanel.tsx
+src/app/
+  dashboard/ veiculos/ abastecimento/ abastecimentos/
+supabase/schema.sql  # schema + RLS para persistência remota
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Como rodar
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Abra [http://localhost:3000](http://localhost:3000). Sem configuração extra o app
+roda em **modo demo** com dados de exemplo salvos no navegador.
 
-## Learn More
+## Persistência na nuvem (opcional)
 
-To learn more about Next.js, take a look at the following resources:
+1. Crie um projeto no [Supabase](https://supabase.com).
+2. Rode o conteúdo de `supabase/schema.sql` no SQL Editor.
+3. Crie um arquivo `.env.local`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+NEXT_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-anon-key
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Com isso, login e dados passam a ser persistidos no Supabase (com RLS por
+usuário).
 
-## Deploy on Vercel
+## Próximos passos (fora do MVP)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Telemetria automática, análise preditiva de manutenção, integração com cartões
+de combustível e planos de assinatura.

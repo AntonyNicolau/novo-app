@@ -5,8 +5,9 @@ import { Toaster } from "sonner";
 import { FirebaseConfigBanner } from "@/components/FirebaseConfigBanner";
 
 export const metadata: Metadata = {
-  title: "AnaliseRoyale - Análise de Decks Clash Royale",
-  description: "Analise seu deck e aumente suas vitórias com IA",
+  title: "FuelWise — Gestão de Combustível para Frotas",
+  description:
+    "Controle de abastecimento, consumo e alertas inteligentes para pequenas e médias frotas.",
 };
 
 export default function RootLayout({

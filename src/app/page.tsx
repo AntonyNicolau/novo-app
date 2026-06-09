@@ -3,148 +3,119 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Shield, Zap, TrendingUp, Crown, BookOpen } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  BarChart3,
+  Bell,
+  Fuel,
+  Gauge,
+  Smartphone,
+  TrendingDown,
+} from "lucide-react";
+import Link from "next/link";
 import { useEffect } from "react";
 
+const FEATURES = [
+  {
+    icon: Smartphone,
+    title: "Registro pelo motorista",
+    desc: "App simples: km, data, litros, valor e posto em poucos toques.",
+  },
+  {
+    icon: BarChart3,
+    title: "Dashboard do gestor",
+    desc: "Consumo (km/L), custo por km e gasto total de cada veículo.",
+  },
+  {
+    icon: Bell,
+    title: "Alertas inteligentes",
+    desc: "Consumo fora do padrão e inconsistências na nota são sinalizados.",
+  },
+  {
+    icon: Gauge,
+    title: "Cálculo automático",
+    desc: "km/L e R$/km calculados a partir dos abastecimentos.",
+  },
+];
+
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, loading, isConfigured } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && isConfigured && user) {
       router.push("/dashboard");
     }
-  }, [user, loading, router]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
+  }, [user, loading, isConfigured, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      {/* Header */}
-      <header className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
+      <header className="mx-auto max-w-6xl px-4 py-6">
         <nav className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Crown className="w-8 h-8 text-yellow-400" />
-            <span className="text-2xl font-bold text-white">AnaliseRoyale</span>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white">
+              <Fuel className="h-5 w-5" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight">FuelWise</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              onClick={() => router.push("/tutorial")}
-              variant="ghost"
-              className="text-white hover:bg-white/10"
-            >
-              <BookOpen className="w-4 h-4 mr-2" />
-              Como Usar
-            </Button>
-            <Button 
-              onClick={() => router.push("/login")}
-              className="bg-white text-purple-900 hover:bg-gray-100"
-            >
-              Entrar
-            </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/login">
+              <Button variant="ghost">Entrar</Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button className="bg-emerald-600 hover:bg-emerald-700">Acessar painel</Button>
+            </Link>
           </div>
         </nav>
       </header>
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-          Domine o Clash Royale
-          <br />
-          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-            com Análise de IA
-          </span>
+      <section className="mx-auto max-w-6xl px-4 py-16 text-center md:py-24">
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
+          <TrendingDown className="h-4 w-4" /> Economize combustível na sua frota
+        </span>
+        <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold leading-tight md:text-6xl">
+          Controle de combustível simples para{" "}
+          <span className="text-emerald-600">pequenas e médias frotas</span>
         </h1>
-        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-          Analise seu deck, receba estratégias personalizadas e descubra combinações vencedoras baseadas nos seus troféus
+        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+          O motorista registra cada abastecimento pelo celular. O gestor acompanha
+          consumo, custos e alertas de inconsistência em tempo real.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button 
-            size="lg"
-            onClick={() => router.push("/login")}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-lg px-8 py-6"
-          >
-            Começar Grátis
-          </Button>
-          <Button 
-            size="lg"
-            variant="outline"
-            onClick={() => router.push("/tutorial")}
-            className="border-white text-white hover:bg-white/10 text-lg px-8 py-6"
-          >
-            <BookOpen className="w-5 h-5 mr-2" />
-            Ver Como Funciona
-          </Button>
-        </div>
-        <p className="text-sm text-gray-400 mt-4">
-          ✨ 2 análises grátis • Sem cartão de crédito
-        </p>
-      </section>
-
-      {/* Features */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="grid md:grid-cols-3 gap-8">
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20 p-8 text-center hover:bg-white/15 transition-all">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Reconhecimento de Cartas</h3>
-            <p className="text-gray-300">
-              Envie um print do seu deck e nossa IA identifica automaticamente todas as cartas
-            </p>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20 p-8 text-center hover:bg-white/15 transition-all">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Zap className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Análise Instantânea</h3>
-            <p className="text-gray-300">
-              Receba probabilidade de vitória, pontos fortes e fracos do seu deck em segundos
-            </p>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20 p-8 text-center hover:bg-white/15 transition-all">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Estratégias Personalizadas</h3>
-            <p className="text-gray-300">
-              Recomendações baseadas nos seus troféus e meta atual do jogo
-            </p>
-          </Card>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link href="/dashboard">
+            <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700">
+              Ver dashboard do gestor
+            </Button>
+          </Link>
+          <Link href="/abastecimento">
+            <Button size="lg" variant="outline">
+              Registrar abastecimento
+            </Button>
+          </Link>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <Card className="bg-gradient-to-r from-purple-600 to-blue-600 border-0 p-12">
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Pronto para subir de arena?
-          </h2>
-          <p className="text-xl text-gray-100 mb-8">
-            Junte-se a milhares de jogadores que já melhoraram seus decks
-          </p>
-          <Button 
-            size="lg"
-            onClick={() => router.push("/login")}
-            className="bg-white text-purple-900 hover:bg-gray-100 text-lg px-8 py-6"
-          >
-            Analisar Meu Deck Agora
-          </Button>
-        </Card>
+      <section className="mx-auto max-w-6xl px-4 pb-20">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURES.map((f) => {
+            const Icon = f.icon;
+            return (
+              <Card key={f.title} className="border-emerald-100">
+                <CardContent className="space-y-3 py-6">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-semibold">{f.title}</h3>
+                  <p className="text-sm text-muted-foreground">{f.desc}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 text-center text-gray-400 border-t border-white/10">
-        <p>© 2024 AnaliseRoyale. Todos os direitos reservados.</p>
+      <footer className="border-t py-6 text-center text-sm text-muted-foreground">
+        FuelWise · MVP de gestão de combustível
       </footer>
     </div>
   );

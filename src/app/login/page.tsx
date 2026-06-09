@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Crown, Mail, Lock, Chrome, Apple } from "lucide-react";
+import { Fuel, Mail, Lock, Chrome, Apple } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -73,16 +73,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white/10 backdrop-blur-lg border-white/20">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Crown className="w-10 h-10 text-yellow-400" />
-            <span className="text-3xl font-bold text-white">AnaliseRoyale</span>
+            <Fuel className="w-9 h-9 text-emerald-300" />
+            <span className="text-3xl font-bold text-white">FuelWise</span>
           </div>
           <CardTitle className="text-white text-2xl">Bem-vindo de volta!</CardTitle>
           <CardDescription className="text-gray-300">
-            Entre para analisar seus decks
+            Entre para gerenciar o combustível da sua frota
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -126,7 +126,7 @@ export default function LoginPage() {
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
                   disabled={loading}
                 >
                   {loading ? "Entrando..." : "Entrar"}
@@ -169,7 +169,7 @@ export default function LoginPage() {
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
                   disabled={loading}
                 >
                   {loading ? "Criando..." : "Criar Conta"}
