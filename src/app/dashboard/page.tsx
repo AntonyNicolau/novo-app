@@ -179,6 +179,7 @@ export default function DashboardPage() {
                           strokeWidth={2}
                           connectNulls
                           dot={{ r: 3 }}
+                          isAnimationActive={false}
                         />
                       ))}
                     </LineChart>
@@ -198,7 +199,7 @@ export default function DashboardPage() {
                       <XAxis dataKey="name" fontSize={12} />
                       <YAxis fontSize={12} />
                       <Tooltip formatter={(v: number) => formatBRL(v)} />
-                      <Bar dataKey="gasto" fill="#059669" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="gasto" fill="#059669" radius={[4, 4, 0, 0]} isAnimationActive={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
