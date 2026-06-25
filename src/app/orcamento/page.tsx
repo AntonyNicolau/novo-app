@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -15,6 +15,8 @@ import {
   ArrowLeft,
   Layers,
   Scissors,
+  Save,
+  FolderOpen,
 } from "lucide-react";
 import { FEFCO_CATALOG, FefcoCode } from "@/lib/cartonagem/fefco";
 import { FLUTE_LIST, FluteId, FLUTES } from "@/lib/cartonagem/flutes";
@@ -24,6 +26,8 @@ import { DielinePreview } from "@/components/cartonagem/DielinePreview";
 import { Box3D } from "@/components/cartonagem/Box3D";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { salvarOrcamento, obterOrcamento } from "@/lib/orcamentos";
 
 const fluteCor: Record<FluteId, string> = {
   B: "#c8a06a",
@@ -43,8 +47,31 @@ function OrcamentoTool() {
   const [tipoFaca, setTipoFaca] = useState<TipoFaca>("plana");
   const [kerf, setKerf] = useState(0.15);
   const [visionLoading, setVisionLoading] = useState(false);
+  const [nome, setNome] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const vetorRef = useRef<HTMLInputElement>(null);
+
+  // Carrega um orçamento salvo quando a URL traz ?id=...
+  useEffect(() => {
+    if (!user) return;
+    const id = new URLSearchParams(window.location.search).get("id");
+    if (!id) return;
+    obterOrcamento(user.id, id).then((o) => {
+      if (!o) return;
+      setFefco(o.fefco);
+      setC(o.C);
+      setL(o.L);
+      setH(o.H);
+      setFlute(o.flute);
+      setEspReal(o.espReal != null ? String(o.espReal) : "");
+      setTipoFaca(o.tipoFaca);
+      setKerf(o.kerf);
+      setNome(o.nome);
+      toast.success(`Orçamento "${o.nome}" carregado`);
+    });
+  }, [user]);
 
   const resultado = useMemo(
     () =>
@@ -116,6 +143,27 @@ function OrcamentoTool() {
     setTimeout(() => window.print(), 250);
   }
 
+  async function salvar() {
+    if (!user) return;
+    const titulo = nome.trim() || `${fefco} ${C}×${L}×${H}mm`;
+    setSalvando(true);
+    const { error } = await salvarOrcamento(user.id, {
+      nome: titulo,
+      fefco,
+      C,
+      L,
+      H,
+      flute,
+      espReal: espReal ? Number(espReal) : null,
+      tipoFaca,
+      kerf,
+      custoTotal: resultado.custo.total,
+    });
+    setSalvando(false);
+    if (error) toast.error("Não foi possível salvar.", { description: error });
+    else toast.success(`Orçamento "${titulo}" salvo`, { description: "Disponível em Meus orçamentos." });
+  }
+
   const c = resultado.custo;
 
   return (
@@ -127,6 +175,12 @@ function OrcamentoTool() {
             <Box className="w-6 h-6 text-amber-400" /> CartoDie
           </Link>
           <div className="flex items-center gap-5">
+            <Link
+              href="/meus-orcamentos"
+              className="text-sm text-stone-300 hover:text-white flex items-center gap-1"
+            >
+              <FolderOpen className="w-4 h-4" /> Meus orçamentos
+            </Link>
             <Link href="/" className="text-sm text-stone-300 hover:text-white flex items-center gap-1">
               <ArrowLeft className="w-4 h-4" /> Início
             </Link>
@@ -350,7 +404,22 @@ function OrcamentoTool() {
               <span className="font-bold text-2xl text-amber-700">{brl(c.total)}</span>
             </div>
 
-            <div className="flex flex-wrap gap-3 mt-5 print:hidden">
+            <div className="flex flex-col sm:flex-row gap-2 mt-5 print:hidden">
+              <input
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder={`Nome do orçamento (ex.: ${fefco} ${C}×${L}×${H})`}
+                className="flex-1 rounded-lg border border-stone-300 px-3 py-2.5 text-sm"
+              />
+              <button
+                onClick={salvar}
+                disabled={salvando}
+                className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white px-4 py-2.5 text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-60"
+              >
+                <Save className="w-4 h-4" /> {salvando ? "Salvando..." : "Salvar"}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-3 mt-3 print:hidden">
               <button
                 onClick={gerarProposta}
                 className="flex items-center gap-2 rounded-lg bg-amber-600 text-white px-4 py-2.5 text-sm font-semibold hover:bg-amber-700 transition"

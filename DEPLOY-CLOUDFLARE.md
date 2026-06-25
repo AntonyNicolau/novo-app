@@ -47,11 +47,22 @@ O cadastro de usuários usa **Supabase Auth**. Sem configuração, o app roda em
    | `NEXT_PUBLIC_SUPABASE_URL` | a *Project URL* |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | a *anon public key* |
 
-4. Em *Supabase → Authentication → Providers*, mantenha **Email** ativo. Para
+4. **Crie as tabelas:** em *SQL Editor → New query*, cole o conteúdo de
+   [`supabase/migrations/0001_init.sql`](./supabase/migrations/0001_init.sql) e
+   clique em **Run**. Isso cria `profiles` e `orcamentos` com **RLS**, de modo
+   que cada cliente só enxerga os próprios orçamentos.
+5. Em *Supabase → Authentication → Providers*, mantenha **Email** ativo. Para
    uso interno, deixe **Confirm email** ligado (o usuário confirma por e-mail).
-5. Para restringir quem pode se cadastrar (site interno), use *Authentication →
+6. Para restringir quem pode se cadastrar (site interno), use *Authentication →
    Settings*: desative cadastros abertos e convide usuários, ou combine com o
    **Cloudflare Access** para um segundo fator de acesso à empresa.
+
+### Planos (gratuito agora, mensal depois)
+
+A tabela `profiles` já tem o campo `plano` (padrão `gratuito`). Quando ativar o
+modo pago, basta integrar um provedor de cobrança (ex.: Stripe) e atualizar o
+`plano` do usuário para `mensal` — a base de dados e o isolamento por cliente já
+estão prontos para o modelo SaaS.
 
 > Quando o projeto virar produto à venda, o Supabase já oferece perfis, papéis
 > (RBAC) e integração com cobrança — base pronta para o modelo SaaS.
