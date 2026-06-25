@@ -15,7 +15,6 @@ export interface OrcamentoInput {
   espessuraReal?: number; // medida de paquímetro (mm); se ausente usa nominal
   tipoFaca: TipoFaca;
   kerf: number; // largura do rastro do laser (mm), tipicamente 0.1–0.2
-  quantidade: number; // tiragem
   abaCola?: number; // mm
 }
 
@@ -48,10 +47,7 @@ export interface CustoDetalhado {
   laminaVinco: number;
   emborrachamento: number;
   maoDeObra: number;
-  faca: number; // subtotal da ferramenta (faca)
-  chapaUnitaria: number; // custo de papelão por caixa
-  chapaTotal: number; // chapa * quantidade
-  total: number; // faca + chapa total
+  total: number; // custo total da faca (ferramenta)
 }
 
 export interface OrcamentoResultado {
@@ -165,11 +161,7 @@ export function calcular(input: OrcamentoInput): OrcamentoResultado {
   const emborrachamento = areaMadeira * 0.3 * PRECOS.emborrachamentoM2;
   const maoDeObra = input.tipoFaca === "rotativa" ? PRECOS.maoDeObraRotativa : PRECOS.maoDeObraPlana;
   const baseRotativa = input.tipoFaca === "rotativa" ? PRECOS.baseRotativa : 0;
-  const facaSubtotal = madeira + laminaCorte + laminaVinco + emborrachamento + maoDeObra + baseRotativa;
-
-  // Custo do papelão por caixa e total da tiragem
-  const chapaUnitaria = areaM2 * flute.precoChapaM2;
-  const chapaTotal = chapaUnitaria * input.quantidade;
+  const facaTotal = madeira + laminaCorte + laminaVinco + emborrachamento + maoDeObra + baseRotativa;
 
   const custo: CustoDetalhado = {
     madeira,
@@ -177,10 +169,7 @@ export function calcular(input: OrcamentoInput): OrcamentoResultado {
     laminaVinco,
     emborrachamento,
     maoDeObra: maoDeObra + baseRotativa,
-    faca: facaSubtotal,
-    chapaUnitaria,
-    chapaTotal,
-    total: facaSubtotal + chapaTotal,
+    total: facaTotal,
   };
 
   return {

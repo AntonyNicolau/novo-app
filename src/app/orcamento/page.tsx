@@ -40,7 +40,6 @@ export default function OrcamentoPage() {
   const [espReal, setEspReal] = useState<string>("");
   const [tipoFaca, setTipoFaca] = useState<TipoFaca>("plana");
   const [kerf, setKerf] = useState(0.15);
-  const [qtd, setQtd] = useState(1000);
   const [visionLoading, setVisionLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const vetorRef = useRef<HTMLInputElement>(null);
@@ -56,9 +55,8 @@ export default function OrcamentoPage() {
         espessuraReal: espReal ? Number(espReal) : undefined,
         tipoFaca,
         kerf,
-        quantidade: qtd,
       }),
-    [fefco, C, L, H, flute, espReal, tipoFaca, kerf, qtd]
+    [fefco, C, L, H, flute, espReal, tipoFaca, kerf]
   );
 
   const modelo = FEFCO_CATALOG.find((f) => f.code === fefco)!;
@@ -250,26 +248,15 @@ export default function OrcamentoPage() {
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium mb-1">Kerf do laser (mm)</label>
-                <input
-                  type="number"
-                  step="0.05"
-                  value={kerf}
-                  onChange={(e) => setKerf(Number(e.target.value))}
-                  className="w-full rounded-lg border border-stone-300 px-2 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1">Tiragem (caixas)</label>
-                <input
-                  type="number"
-                  value={qtd}
-                  onChange={(e) => setQtd(Number(e.target.value))}
-                  className="w-full rounded-lg border border-stone-300 px-2 py-2 text-sm"
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">Kerf do laser (mm)</label>
+              <input
+                type="number"
+                step="0.05"
+                value={kerf}
+                onChange={(e) => setKerf(Number(e.target.value))}
+                className="w-full rounded-lg border border-stone-300 px-2 py-2 text-sm"
+              />
             </div>
             <p className="text-[11px] text-stone-500 mt-2">{resultado.faca.observacao}</p>
           </section>
@@ -341,9 +328,9 @@ export default function OrcamentoPage() {
           {/* Orçamento */}
           <div className="bg-white rounded-xl border border-stone-200 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg">Proposta de orçamento</h3>
+              <h3 className="font-bold text-lg">Orçamento da faca</h3>
               <span className="text-xs text-stone-400">
-                {modelo.code} • {qtd.toLocaleString("pt-BR")} caixas
+                {modelo.code} • faca {resultado.faca.tipo}
               </span>
             </div>
             <div className="grid md:grid-cols-2 gap-x-8 gap-y-1 text-sm">
@@ -352,12 +339,9 @@ export default function OrcamentoPage() {
               <Row k="Lâmina de vinco" v={brl(c.laminaVinco)} />
               <Row k="Emborrachamento técnico" v={brl(c.emborrachamento)} />
               <Row k="Mão de obra / estrutura" v={brl(c.maoDeObra)} />
-              <Row k="Faca (ferramenta, 1x)" v={brl(c.faca)} bold />
-              <Row k="Papelão por caixa" v={brl(c.chapaUnitaria)} />
-              <Row k={`Papelão (${qtd.toLocaleString("pt-BR")} un.)`} v={brl(c.chapaTotal)} bold />
             </div>
             <div className="border-t border-stone-200 mt-4 pt-4 flex items-center justify-between">
-              <span className="font-bold text-lg">Total estimado</span>
+              <span className="font-bold text-lg">Total da faca</span>
               <span className="font-bold text-2xl text-amber-700">{brl(c.total)}</span>
             </div>
 
