@@ -86,3 +86,10 @@ begin
     from public.sellers s where s.id = p_seller;
   end if;
 end; $$;
+
+-- Estas funções são exclusivas do conector (service_role). Revoga das chaves
+-- públicas para impedir injeção de dados via /rest/v1/rpc/...
+revoke execute on function public.record_wa_message(uuid, text, text, text, text, text, timestamptz) from public, anon, authenticated;
+revoke execute on function public.set_session_status(uuid, text, text, text, boolean) from public, anon, authenticated;
+grant execute on function public.record_wa_message(uuid, text, text, text, text, text, timestamptz) to service_role;
+grant execute on function public.set_session_status(uuid, text, text, text, boolean) to service_role;
