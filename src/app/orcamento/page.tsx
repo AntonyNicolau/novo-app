@@ -17,6 +17,7 @@ import {
   Scissors,
   Save,
   FolderOpen,
+  LayoutGrid,
 } from "lucide-react";
 import { FEFCO_CATALOG, FefcoCode, getArquetipo, Dieline } from "@/lib/cartonagem/fefco";
 import { FLUTE_LIST, FluteId, FLUTES } from "@/lib/cartonagem/flutes";
@@ -55,6 +56,12 @@ function OrcamentoTool() {
   const fileRef = useRef<HTMLInputElement>(null);
   const vetorRef = useRef<HTMLInputElement>(null);
 
+  // Pré-seleciona o modelo quando vem da galeria (?fefco=...)
+  useEffect(() => {
+    const f = new URLSearchParams(window.location.search).get("fefco");
+    if (f && FEFCO_CATALOG.some((m) => m.code === f)) setFefco(f);
+  }, []);
+
   // Carrega um orçamento salvo quando a URL traz ?id=...
   useEffect(() => {
     if (!user) return;
@@ -91,7 +98,17 @@ function OrcamentoTool() {
     [fefco, C, L, H, flute, espReal, tipoFaca, kerf, dxf]
   );
 
-  const modelo = FEFCO_CATALOG.find((f) => f.code === fefco)!;
+  const modelo = FEFCO_CATALOG.find((f) => f.code === fefco) ?? FEFCO_CATALOG[0];
+
+  // FEFCO agrupado por família para o seletor
+  const gruposFefco = useMemo(() => {
+    const map = new Map<string, typeof FEFCO_CATALOG>();
+    for (const m of FEFCO_CATALOG) {
+      if (!map.has(m.familia)) map.set(m.familia, []);
+      map.get(m.familia)!.push(m);
+    }
+    return [...map.entries()];
+  }, []);
 
   async function onFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -201,6 +218,12 @@ function OrcamentoTool() {
           </Link>
           <div className="flex items-center gap-5">
             <Link
+              href="/modelos"
+              className="text-sm text-stone-300 hover:text-white flex items-center gap-1"
+            >
+              <LayoutGrid className="w-4 h-4" /> Modelos
+            </Link>
+            <Link
               href="/meus-orcamentos"
               className="text-sm text-stone-300 hover:text-white flex items-center gap-1"
             >
@@ -242,16 +265,28 @@ function OrcamentoTool() {
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFoto} />
             <input ref={vetorRef} type="file" accept=".dxf,.ai,.pdf" hidden onChange={onVetor} />
 
-            <label className="block text-sm font-medium mt-4 mb-1">Estrutura FEFCO</label>
+            <div className="flex items-center justify-between mt-4 mb-1">
+              <label className="block text-sm font-medium">Estrutura FEFCO</label>
+              <Link href="/modelos" className="text-xs text-amber-700 hover:underline flex items-center gap-1">
+                <LayoutGrid className="w-3.5 h-3.5" /> ver catálogo
+              </Link>
+            </div>
             <select
               value={fefco}
-              onChange={(e) => setFefco(e.target.value as FefcoCode)}
+              onChange={(e) => {
+                setFefco(e.target.value as FefcoCode);
+                setDxf(null);
+              }}
               className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm bg-white"
             >
-              {FEFCO_CATALOG.map((f) => (
-                <option key={f.code} value={f.code}>
-                  {f.code} — {f.nome}
-                </option>
+              {gruposFefco.map(([familia, modelos]) => (
+                <optgroup key={familia} label={familia}>
+                  {modelos.map((f) => (
+                    <option key={f.code} value={f.code}>
+                      {f.code} — {f.nome}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
             <p className="text-xs text-stone-500 mt-2">{modelo.descricao}</p>

@@ -77,7 +77,7 @@ export function Box3D({ C, L, H, fluteColor = "#c8a06a", arquetipo = "rsc", clas
           transform: `rotateX(${rot.x}deg) rotateY(${rot.y}deg)`,
         }}
       >
-        {arquetipo === "telescopica" ? (
+        {arquetipo === "telescopica" || arquetipo === "rigida" ? (
           <>
             {/* fundo (bandeja) */}
             <Cuboid w={w} d={d} h={h * 0.8} oy={h * 0.12} color={fluteColor} openTop />
@@ -92,6 +92,9 @@ export function Box3D({ C, L, H, fluteColor = "#c8a06a", arquetipo = "rsc", clas
               bright={1.12}
             />
           </>
+        ) : arquetipo === "luva" ? (
+          // luva / corpo tubular: aberto nas duas extremidades
+          <Cuboid w={w} d={d} h={h} color={fluteColor} openTop openBottom />
         ) : arquetipo === "rsc" ? (
           <Cuboid w={w} d={d} h={h} color={fluteColor} seamTop />
         ) : (
