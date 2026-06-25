@@ -18,7 +18,7 @@ import {
   Save,
   FolderOpen,
 } from "lucide-react";
-import { FEFCO_CATALOG, FefcoCode } from "@/lib/cartonagem/fefco";
+import { FEFCO_CATALOG, FefcoCode, getArquetipo } from "@/lib/cartonagem/fefco";
 import { FLUTE_LIST, FluteId, FLUTES } from "@/lib/cartonagem/flutes";
 import { calcular, brl, TipoFaca } from "@/lib/cartonagem/engine";
 import { gerarDXF, baixarTexto } from "@/lib/cartonagem/dxf";
@@ -346,7 +346,14 @@ function OrcamentoTool() {
               <h3 className="text-sm font-semibold flex items-center gap-2 mb-2">
                 <Box className="w-4 h-4 text-amber-500" /> Preview 3D (caixa dobrada)
               </h3>
-              <Box3D C={C} L={L} H={H} fluteColor={fluteCor[flute]} className="w-full h-64" />
+              <Box3D
+                C={C}
+                L={L}
+                H={H}
+                fluteColor={fluteCor[flute]}
+                arquetipo={getArquetipo(fefco)}
+                className="w-full h-64"
+              />
               <p className="text-[11px] text-center text-stone-400">Arraste para girar • duplo clique alterna auto-rotação</p>
             </div>
           </div>

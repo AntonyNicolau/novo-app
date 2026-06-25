@@ -134,19 +134,21 @@ export function compensar({ C, L, H, t, abaCola = 35 }: ParamsGeometria): DimsCo
   return { C, L, H, t, Cc, Lc, Hc, aba, abaCola };
 }
 
-// Geometria do FEFCO 0201 (RSC) — modelo de referência totalmente detalhado.
-function dieline0201(p: ParamsGeometria): Dieline {
+// Caixa de painéis (família 02) parametrizada pelo tamanho das abas inferior/superior.
+// RSC (0201): abas iguais (metade da largura). Fundo automático (0215): aba inferior
+// com sobreposição total (trava de fundo), aba superior normal.
+function dielineCaixa(p: ParamsGeometria, abaInf: number, abaSup: number): Dieline {
   const d = compensar(p);
-  const { Cc, Lc, Hc, aba, abaCola } = d;
+  const { Cc, Lc, Hc, abaCola } = d;
 
   // Eixo X: aba de cola | C | L | C | L
   const xs = [0, abaCola, abaCola + Cc, abaCola + Cc + Lc, abaCola + Cc + Lc + Cc];
   const larguraTotal = abaCola + 2 * Cc + 2 * Lc;
   // Eixo Y: aba inferior | corpo (Hc) | aba superior
-  const alturaTotal = aba + Hc + aba;
+  const alturaTotal = abaInf + Hc + abaSup;
   const yBottomFlap = 0;
-  const yBody = aba;
-  const yTopFlap = aba + Hc;
+  const yBody = abaInf;
+  const yTopFlap = abaInf + Hc;
 
   const cut: Line[] = [];
   const crease: Line[] = [];
@@ -193,6 +195,19 @@ function dieline0201(p: ParamsGeometria): Dieline {
   return { largura: larguraTotal, altura: alturaTotal, cut, crease, panels };
 }
 
+// FEFCO 0201 (RSC): abas iguais, encontram-se no centro.
+function dieline0201(p: ParamsGeometria): Dieline {
+  const { aba } = compensar(p);
+  return dielineCaixa(p, aba, aba);
+}
+
+// Fundo automático (0215): aba de fundo com sobreposição total (trava),
+// aba superior normal — visualmente o fundo fica reforçado.
+function dielineFundoAutomatico(p: ParamsGeometria): Dieline {
+  const { aba, Lc } = compensar(p);
+  return dielineCaixa(p, Lc, aba);
+}
+
 // Bandeja de uma folha (família 04, ex. 0427) — aproximação paramétrica:
 // fundo C x L com 4 paredes de altura H e abas de canto.
 function dielineBandeja(p: ParamsGeometria): Dieline {
@@ -229,17 +244,45 @@ function dielineBandeja(p: ParamsGeometria): Dieline {
   return { largura: larguraTotal, altura: alturaTotal, cut, crease, panels };
 }
 
-// Caixa telescópica (0300): geramos o fundo (bandeja) como referência principal.
+// Desloca um desenho no eixo X (para compor mais de uma peça na mesma lâmina).
+function deslocar(d: Dieline, dx: number): Dieline {
+  return {
+    largura: d.largura,
+    altura: d.altura,
+    cut: d.cut.map((l) => ({ x1: l.x1 + dx, y1: l.y1, x2: l.x2 + dx, y2: l.y2 })),
+    crease: d.crease.map((l) => ({ x1: l.x1 + dx, y1: l.y1, x2: l.x2 + dx, y2: l.y2 })),
+    panels: d.panels.map((r) => ({ ...r, x: r.x + dx })),
+  };
+}
+
+// Caixa telescópica (0300): duas peças — fundo (bandeja) + tampa (bandeja
+// um pouco maior e mais rasa) lado a lado na mesma lâmina.
 function dielineTelescopica(p: ParamsGeometria): Dieline {
-  return dielineBandeja(p);
+  const fundo = dielineBandeja(p);
+  const tampa = dielineBandeja({
+    ...p,
+    C: p.C + 3,
+    L: p.L + 3,
+    H: Math.max(20, p.H * 0.4),
+  });
+  const gap = Math.max(p.C, 60) * 0.25;
+  const tampaDesl = deslocar(tampa, fundo.largura + gap);
+  return {
+    largura: fundo.largura + gap + tampa.largura,
+    altura: Math.max(fundo.altura, tampa.altura),
+    cut: [...fundo.cut, ...tampaDesl.cut],
+    crease: [...fundo.crease, ...tampaDesl.crease],
+    panels: [...fundo.panels, ...tampaDesl.panels],
+  };
 }
 
 export function gerarDieline(code: FefcoCode, p: ParamsGeometria): Dieline {
   switch (code) {
     case "0201":
     case "0203":
-    case "0215":
       return dieline0201(p);
+    case "0215":
+      return dielineFundoAutomatico(p);
     case "0427":
     case "0427B":
       return dielineBandeja(p);
@@ -247,5 +290,22 @@ export function gerarDieline(code: FefcoCode, p: ParamsGeometria): Dieline {
       return dielineTelescopica(p);
     default:
       return dieline0201(p);
+  }
+}
+
+// Arquétipo visual usado pelo preview 3D para representar a estrutura.
+export type Arquetipo = "rsc" | "fundoAutomatico" | "bandeja" | "telescopica";
+
+export function getArquetipo(code: FefcoCode): Arquetipo {
+  switch (code) {
+    case "0427":
+    case "0427B":
+      return "bandeja";
+    case "0300":
+      return "telescopica";
+    case "0215":
+      return "fundoAutomatico";
+    default:
+      return "rsc"; // 0201, 0203
   }
 }

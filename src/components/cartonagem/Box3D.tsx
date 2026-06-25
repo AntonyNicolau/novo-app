@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Arquetipo } from "@/lib/cartonagem/fefco";
 
 interface Props {
   C: number; // comprimento (mm)
   L: number; // largura (mm)
   H: number; // altura (mm)
   fluteColor?: string;
+  arquetipo?: Arquetipo;
   className?: string;
 }
 
-// Preview 3D em tempo real da caixa "dobrada" usando transforms CSS 3D.
-// Auto-rotaciona e permite arrastar para girar. Escala proporcional a C x L x H.
-export function Box3D({ C, L, H, fluteColor = "#c8a06a", className }: Props) {
-  const [rot, setRot] = useState({ x: -22, y: -32 });
+// Preview 3D em tempo real que representa a estrutura selecionada (não só uma
+// caixa genérica): RSC fechada, fundo automático aberto, bandeja e telescópica.
+export function Box3D({ C, L, H, fluteColor = "#c8a06a", arquetipo = "rsc", className }: Props) {
+  const [rot, setRot] = useState({ x: -24, y: -34 });
   const drag = useRef<{ x: number; y: number } | null>(null);
   const [auto, setAuto] = useState(true);
 
@@ -28,19 +30,12 @@ export function Box3D({ C, L, H, fluteColor = "#c8a06a", className }: Props) {
     return () => cancelAnimationFrame(raf);
   }, [auto]);
 
-  // normaliza para caber numa caixa de ~180px no maior eixo
+  // normaliza para caber numa cena de ~170px no maior eixo
   const max = Math.max(C, L, H, 1);
-  const s = 170 / max;
-  const w = C * s; // largura visual (comprimento)
-  const d = L * s; // profundidade (largura)
-  const h = H * s; // altura
-
-  const faceBase: React.CSSProperties = {
-    position: "absolute",
-    background: fluteColor,
-    border: "1px solid rgba(90,60,20,0.5)",
-    boxShadow: "inset 0 0 40px rgba(0,0,0,0.15)",
-  };
+  const s = 160 / max;
+  const w = C * s;
+  const d = L * s;
+  const h = H * s;
 
   const onDown = (e: React.PointerEvent) => {
     setAuto(false);
@@ -59,7 +54,7 @@ export function Box3D({ C, L, H, fluteColor = "#c8a06a", className }: Props) {
     <div
       className={className}
       style={{
-        perspective: "900px",
+        perspective: "950px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -76,27 +71,193 @@ export function Box3D({ C, L, H, fluteColor = "#c8a06a", className }: Props) {
       <div
         style={{
           position: "relative",
-          width: w,
-          height: h,
+          width: Math.max(w, 1),
+          height: Math.max(h, 1),
           transformStyle: "preserve-3d",
           transform: `rotateX(${rot.x}deg) rotateY(${rot.y}deg)`,
         }}
       >
-        {/* frente */}
-        <div style={{ ...faceBase, width: w, height: h, transform: `translateZ(${d / 2}px)` }} />
-        {/* trás */}
-        <div style={{ ...faceBase, width: w, height: h, transform: `rotateY(180deg) translateZ(${d / 2}px)`, filter: "brightness(0.8)" }} />
-        {/* direita */}
-        <div style={{ ...faceBase, width: d, height: h, left: (w - d) / 2, transform: `rotateY(90deg) translateZ(${w / 2}px)`, filter: "brightness(0.88)" }} />
-        {/* esquerda */}
-        <div style={{ ...faceBase, width: d, height: h, left: (w - d) / 2, transform: `rotateY(-90deg) translateZ(${w / 2}px)`, filter: "brightness(0.88)" }} />
-        {/* topo (abas) */}
-        <div style={{ ...faceBase, width: w, height: d, top: (h - d) / 2, transform: `rotateX(90deg) translateZ(${h / 2}px)`, filter: "brightness(1.08)" }}>
-          <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: "rgba(90,60,20,0.4)" }} />
-        </div>
-        {/* fundo */}
-        <div style={{ ...faceBase, width: w, height: d, top: (h - d) / 2, transform: `rotateX(-90deg) translateZ(${h / 2}px)`, filter: "brightness(0.7)" }} />
+        {arquetipo === "telescopica" ? (
+          <>
+            {/* fundo (bandeja) */}
+            <Cuboid w={w} d={d} h={h * 0.8} oy={h * 0.12} color={fluteColor} openTop />
+            {/* tampa cobrindo o topo */}
+            <Cuboid
+              w={w + 8}
+              d={d + 8}
+              h={h * 0.45}
+              oy={-h * 0.32}
+              color={fluteColor}
+              openBottom
+              bright={1.12}
+            />
+          </>
+        ) : arquetipo === "rsc" ? (
+          <Cuboid w={w} d={d} h={h} color={fluteColor} seamTop />
+        ) : (
+          // bandeja e fundo automático: caixa aberta no topo
+          <Cuboid
+            w={w}
+            d={d}
+            h={h}
+            color={fluteColor}
+            openTop
+            lockBottom={arquetipo === "fundoAutomatico"}
+          />
+        )}
       </div>
+    </div>
+  );
+}
+
+interface CuboidProps {
+  w: number;
+  d: number;
+  h: number;
+  color: string;
+  oy?: number; // deslocamento vertical no espaço 3D
+  openTop?: boolean;
+  openBottom?: boolean;
+  seamTop?: boolean; // mostra a junção das abas no topo (caixa fechada)
+  lockBottom?: boolean; // mostra a trava do fundo automático
+  bright?: number;
+}
+
+function Cuboid({
+  w,
+  d,
+  h,
+  color,
+  oy = 0,
+  openTop = false,
+  openBottom = false,
+  seamTop = false,
+  lockBottom = false,
+  bright = 1,
+}: CuboidProps) {
+  const face = (extra: React.CSSProperties): React.CSSProperties => ({
+    position: "absolute",
+    background: color,
+    border: "1px solid rgba(90,60,20,0.5)",
+    boxShadow: "inset 0 0 36px rgba(0,0,0,0.14)",
+    filter: `brightness(${bright})`,
+    ...extra,
+  });
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        width: w,
+        height: h,
+        transform: `translate(-50%, -50%) translateY(${oy}px)`,
+        transformStyle: "preserve-3d",
+      }}
+    >
+      {/* frente */}
+      <div style={face({ width: w, height: h, left: 0, top: 0, transform: `translateZ(${d / 2}px)` })} />
+      {/* trás */}
+      <div
+        style={face({
+          width: w,
+          height: h,
+          left: 0,
+          top: 0,
+          transform: `rotateY(180deg) translateZ(${d / 2}px)`,
+          filter: `brightness(${bright * 0.8})`,
+        })}
+      />
+      {/* direita */}
+      <div
+        style={face({
+          width: d,
+          height: h,
+          left: (w - d) / 2,
+          top: 0,
+          transform: `rotateY(90deg) translateZ(${w / 2}px)`,
+          filter: `brightness(${bright * 0.9})`,
+        })}
+      />
+      {/* esquerda */}
+      <div
+        style={face({
+          width: d,
+          height: h,
+          left: (w - d) / 2,
+          top: 0,
+          transform: `rotateY(-90deg) translateZ(${w / 2}px)`,
+          filter: `brightness(${bright * 0.9})`,
+        })}
+      />
+      {/* topo */}
+      {!openTop && (
+        <div
+          style={face({
+            width: w,
+            height: d,
+            left: 0,
+            top: (h - d) / 2,
+            transform: `rotateX(90deg) translateZ(${h / 2}px)`,
+            filter: `brightness(${bright * 1.08})`,
+          })}
+        >
+          {seamTop && (
+            <div
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: 0,
+                bottom: 0,
+                width: 1,
+                background: "rgba(90,60,20,0.45)",
+              }}
+            />
+          )}
+        </div>
+      )}
+      {/* fundo */}
+      {!openBottom && (
+        <div
+          style={face({
+            width: w,
+            height: d,
+            left: 0,
+            top: (h - d) / 2,
+            transform: `rotateX(-90deg) translateZ(${h / 2}px)`,
+            filter: `brightness(${bright * 0.62})`,
+          })}
+        >
+          {lockBottom && (
+            <>
+              {/* trava do fundo automático: abas cruzadas */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: "8%",
+                  right: "8%",
+                  top: "50%",
+                  height: 2,
+                  background: "rgba(40,25,5,0.55)",
+                  transform: "rotate(26deg)",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: "8%",
+                  right: "8%",
+                  top: "50%",
+                  height: 2,
+                  background: "rgba(40,25,5,0.55)",
+                  transform: "rotate(-26deg)",
+                }}
+              />
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
