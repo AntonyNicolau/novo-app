@@ -18,10 +18,11 @@ import {
   Save,
   FolderOpen,
 } from "lucide-react";
-import { FEFCO_CATALOG, FefcoCode, getArquetipo } from "@/lib/cartonagem/fefco";
+import { FEFCO_CATALOG, FefcoCode, getArquetipo, Dieline } from "@/lib/cartonagem/fefco";
 import { FLUTE_LIST, FluteId, FLUTES } from "@/lib/cartonagem/flutes";
 import { calcular, brl, TipoFaca } from "@/lib/cartonagem/engine";
 import { gerarDXF, baixarTexto } from "@/lib/cartonagem/dxf";
+import { lerDXF } from "@/lib/cartonagem/dxfImport";
 import { DielinePreview } from "@/components/cartonagem/DielinePreview";
 import { Box3D } from "@/components/cartonagem/Box3D";
 import { RequireAuth } from "@/components/auth/RequireAuth";
@@ -49,6 +50,7 @@ function OrcamentoTool() {
   const [visionLoading, setVisionLoading] = useState(false);
   const [nome, setNome] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [dxf, setDxf] = useState<{ dieline: Dieline; nome: string } | null>(null);
   const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const vetorRef = useRef<HTMLInputElement>(null);
@@ -84,8 +86,9 @@ function OrcamentoTool() {
         espessuraReal: espReal ? Number(espReal) : undefined,
         tipoFaca,
         kerf,
+        dielineImportada: dxf?.dieline,
       }),
-    [fefco, C, L, H, flute, espReal, tipoFaca, kerf]
+    [fefco, C, L, H, flute, espReal, tipoFaca, kerf, dxf]
   );
 
   const modelo = FEFCO_CATALOG.find((f) => f.code === fefco)!;
@@ -121,18 +124,40 @@ function OrcamentoTool() {
     }
   }
 
-  function onVetor(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onVetor(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    toast.success(`Vetor "${file.name}" recebido`, {
-      description: "Arquivo registrado para projeto personalizado (DXF/AI/PDF).",
-    });
     e.target.value = "";
+    const ext = file.name.toLowerCase().split(".").pop();
+    if (ext !== "dxf") {
+      toast.info(`"${file.name}" recebido`, {
+        description: "Leitura de desenho disponível para DXF. AI/PDF: em breve.",
+      });
+      return;
+    }
+    try {
+      const texto = await file.text();
+      const { dieline, entidades, unidade } = lerDXF(texto);
+      setDxf({ dieline, nome: file.name });
+      if (!nome) setNome(file.name.replace(/\.dxf$/i, ""));
+      toast.success(`DXF "${file.name}" carregado`, {
+        description: `${entidades} entidades • unidade ${unidade} • desenho do cliente no preview.`,
+      });
+    } catch (err) {
+      toast.error("Não foi possível ler o DXF", {
+        description: err instanceof Error ? err.message : "Arquivo inválido.",
+      });
+    }
+  }
+
+  function removerDXF() {
+    setDxf(null);
+    toast.message("Voltou para a estrutura FEFCO selecionada.");
   }
 
   function exportarDXF() {
-    const dxf = gerarDXF(resultado.dieline, { kerf, fefco });
-    baixarTexto(`faca-${fefco}-${C}x${L}x${H}.dxf`, dxf);
+    const conteudo = gerarDXF(resultado.dieline, { kerf, fefco });
+    baixarTexto(dxf ? `faca-${dxf.nome}` : `faca-${fefco}-${C}x${L}x${H}.dxf`, conteudo);
     toast.success("DXF industrial exportado", {
       description: "Camadas CORTE e VINCO separadas, em milímetros.",
     });
@@ -326,9 +351,23 @@ function OrcamentoTool() {
           {/* Previews */}
           <div className="grid md:grid-cols-2 gap-6 print:grid-cols-2">
             <div className="bg-white rounded-xl border border-stone-200 p-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2 mb-2">
-                <Layers className="w-4 h-4 text-amber-500" /> Desenho da faca (dieline)
-              </h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-amber-500" /> Desenho da faca (dieline)
+                </h3>
+                {dxf && (
+                  <span className="flex items-center gap-2 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">
+                    DXF: {dxf.nome}
+                    <button
+                      onClick={removerDXF}
+                      className="text-emerald-700 hover:text-emerald-900 font-bold"
+                      title="Remover e voltar ao FEFCO"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )}
+              </div>
               <DielinePreview dieline={resultado.dieline} className="w-full h-64" />
               <div className="flex gap-4 text-xs mt-2 text-stone-500">
                 <span className="flex items-center gap-1">
@@ -354,7 +393,11 @@ function OrcamentoTool() {
                 arquetipo={getArquetipo(fefco)}
                 className="w-full h-64"
               />
-              <p className="text-[11px] text-center text-stone-400">Arraste para girar • duplo clique alterna auto-rotação</p>
+              <p className="text-[11px] text-center text-stone-400">
+                {dxf
+                  ? "Arquivo importado: 3D aproximado pelas medidas C×L×H informadas."
+                  : "Arraste para girar • duplo clique alterna auto-rotação"}
+              </p>
             </div>
           </div>
 

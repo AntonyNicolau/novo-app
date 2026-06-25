@@ -16,6 +16,7 @@ export interface OrcamentoInput {
   tipoFaca: TipoFaca;
   kerf: number; // largura do rastro do laser (mm), tipicamente 0.1–0.2
   abaCola?: number; // mm
+  dielineImportada?: Dieline; // quando o cliente importa um DXF, usa este desenho
 }
 
 export interface EspecFaca {
@@ -124,13 +125,16 @@ export function calcular(input: OrcamentoInput): OrcamentoResultado {
   const espessuraFonte = input.espessuraReal && input.espessuraReal > 0 ? "paquímetro" : "nominal";
 
   const dims = compensar({ C: input.C, L: input.L, H: input.H, t: espessura, abaCola: input.abaCola });
-  const dieline = gerarDieline(input.fefco, {
-    C: input.C,
-    L: input.L,
-    H: input.H,
-    t: espessura,
-    abaCola: input.abaCola,
-  });
+  // Se houver um DXF importado, o orçamento usa o desenho do próprio cliente.
+  const dieline =
+    input.dielineImportada ??
+    gerarDieline(input.fefco, {
+      C: input.C,
+      L: input.L,
+      H: input.H,
+      t: espessura,
+      abaCola: input.abaCola,
+    });
 
   // Metragem de lâmina
   const corteMm = comprimentoLinhas(dieline.cut);
