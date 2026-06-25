@@ -10,7 +10,9 @@ export type Arquetipo =
   | "bandeja"
   | "telescopica"
   | "luva"
-  | "rigida";
+  | "rigida"
+  | "correio"
+  | "maleta";
 
 export interface FefcoModel {
   code: FefcoCode;
@@ -24,6 +26,11 @@ export interface FefcoModel {
 
 // Famílias FEFCO e seu arquétipo/descrição padrão.
 const FAMILIAS: Record<string, { nome: string; arq: Arquetipo; desc: string }> = {
+  "00": {
+    nome: "⭐ Mais usados",
+    arq: "rsc",
+    desc: "Modelos comerciais mais usados no dia a dia.",
+  },
   "02": {
     nome: "02 — Caixas slotadas (coladas/grampeadas)",
     arq: "rsc",
@@ -63,6 +70,24 @@ const FAMILIAS: Record<string, { nome: string; arq: Arquetipo; desc: string }> =
 
 // Sobrescritas para modelos notáveis (nome amigável, descrição e/ou arquétipo).
 const NOTAVEIS: Record<string, { nome: string; desc?: string; arq?: Arquetipo; hints?: string[] }> = {
+  CORREIO: {
+    nome: "Caixa Correio (e-commerce / mailer)",
+    desc: "Caixa de uma peça para envio (Correios/transportadora): fundo, paredes, abas laterais de trava e tampa que dobra e encaixa na frente.",
+    arq: "correio",
+    hints: ["mailer", "e-commerce", "correio", "sedex", "envio"],
+  },
+  AMERICANO: {
+    nome: "Caixa Fechamento Americano (RSC 0201)",
+    desc: "Caixa de transporte padrão com abas que se encontram no centro, fechada com fita (fechamento americano). É a RSC 0201.",
+    arq: "rsc",
+    hints: ["fechamento americano", "rsc", "caixa de transporte"],
+  },
+  MALETA: {
+    nome: "Caixa Maleta (tampa articulada)",
+    desc: "Caixa de uma peça que monta como uma maleta: fundo com paredes e tampa articulada que fecha por cima com trava frontal.",
+    arq: "maleta",
+    hints: ["maleta", "estojo", "tampa", "alça"],
+  },
   "0201": {
     nome: "Caixa Maleta (RSC)",
     desc: "Regular Slotted Container. Abas superiores e inferiores de mesmo comprimento que se encontram no centro. A caixa mais comum do mundo.",
@@ -94,6 +119,7 @@ const NOTAVEIS: Record<string, { nome: string; desc?: string; arq?: Arquetipo; h
 
 // Códigos padrão FEFCO por família (conjunto amplo do catálogo 2022).
 const CODIGOS: Record<string, string[]> = {
+  "00": ["CORREIO", "AMERICANO", "MALETA"],
   "02": ["0200","0201","0202","0203","0204","0205","0206","0207","0208","0209","0210","0211","0212","0214","0215","0216","0217","0225","0226","0227","0228","0231"],
   "03": ["0300","0301","0302","0303","0306","0307","0308","0309","0310","0312","0320","0322","0325","0330","0331","0351"],
   "04": ["0400","0401","0402","0403","0404","0405","0406","0410","0411","0412","0413","0415","0416","0420","0421","0422","0423","0424","0425","0426","0427","0428","0429","0430","0431","0432","0435","0440","0441","0442","0443","0445","0446","0451","0452","0455","0457","0470","0471","0472","0473"],
@@ -338,6 +364,85 @@ function dielineTelescopica(p: ParamsGeometria): Dieline {
   };
 }
 
+// Monta um dieline a partir de painéis (retângulos) + linhas de dobra (vincos):
+// cada aresta de painel que não coincide com um vinco vira corte (contorno).
+function montar(panels: Rect[], folds: Line[]): Dieline {
+  const eq = (a: number, b: number) => Math.abs(a - b) < 0.5;
+  const igual = (a: Line, b: Line) =>
+    (eq(a.x1, b.x1) && eq(a.y1, b.y1) && eq(a.x2, b.x2) && eq(a.y2, b.y2)) ||
+    (eq(a.x1, b.x2) && eq(a.y1, b.y2) && eq(a.x2, b.x1) && eq(a.y2, b.y1));
+  const cut: Line[] = [];
+  for (const p of panels) {
+    const arestas: Line[] = [
+      { x1: p.x, y1: p.y, x2: p.x + p.w, y2: p.y },
+      { x1: p.x + p.w, y1: p.y, x2: p.x + p.w, y2: p.y + p.h },
+      { x1: p.x + p.w, y1: p.y + p.h, x2: p.x, y2: p.y + p.h },
+      { x1: p.x, y1: p.y + p.h, x2: p.x, y2: p.y },
+    ];
+    for (const e of arestas) {
+      if (folds.some((f) => igual(f, e))) continue;
+      if (cut.some((c) => igual(c, e))) continue;
+      cut.push(e);
+    }
+  }
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const l of [...cut, ...folds]) {
+    minX = Math.min(minX, l.x1, l.x2);
+    minY = Math.min(minY, l.y1, l.y2);
+    maxX = Math.max(maxX, l.x1, l.x2);
+    maxY = Math.max(maxY, l.y1, l.y2);
+  }
+  const s = (l: Line): Line => ({ x1: l.x1 - minX, y1: l.y1 - minY, x2: l.x2 - minX, y2: l.y2 - minY });
+  return {
+    largura: maxX - minX,
+    altura: maxY - minY,
+    cut: cut.map(s),
+    crease: folds.map(s),
+    panels: panels.map((r) => ({ ...r, x: r.x - minX, y: r.y - minY })),
+  };
+}
+
+// Caixa correio / mailer (uma peça): fundo + 4 paredes + abas laterais de trava
+// + tampa que dobra por trás e encaixa na frente. Usada também para a maleta.
+function dielineCorreio(p: ParamsGeometria): Dieline {
+  const { Cc, Lc, Hc } = compensar(p);
+  const ft = Hc * 0.55; // aba de encaixe (tuck)
+  const x0 = Hc + 5;
+  const y0 = Hc + ft + 5;
+
+  const panels: Rect[] = [
+    { x: x0, y: y0, w: Cc, h: Lc, label: "fundo" },
+    { x: x0, y: y0 - Hc, w: Cc, h: Hc, label: "frente" },
+    { x: x0, y: y0 - Hc - ft, w: Cc, h: ft, label: "" },
+    { x: x0, y: y0 + Lc, w: Cc, h: Hc, label: "trás" },
+    { x: x0, y: y0 + Lc + Hc, w: Cc, h: Lc, label: "tampa" },
+    { x: x0, y: y0 + Lc + Hc + Lc, w: Cc, h: ft, label: "" },
+    { x: x0 - Hc, y: y0, w: Hc, h: Lc, label: "lat" },
+    { x: x0 + Cc, y: y0, w: Hc, h: Lc, label: "lat" },
+    // abas de trava (orelhas) das paredes frente/trás
+    { x: x0 - Hc, y: y0 - Hc, w: Hc, h: Hc, label: "" },
+    { x: x0 + Cc, y: y0 - Hc, w: Hc, h: Hc, label: "" },
+    { x: x0 - Hc, y: y0 + Lc, w: Hc, h: Hc, label: "" },
+    { x: x0 + Cc, y: y0 + Lc, w: Hc, h: Hc, label: "" },
+  ];
+
+  const folds: Line[] = [
+    { x1: x0, y1: y0, x2: x0 + Cc, y2: y0 }, // fundo-frente
+    { x1: x0, y1: y0 + Lc, x2: x0 + Cc, y2: y0 + Lc }, // fundo-trás
+    { x1: x0, y1: y0, x2: x0, y2: y0 + Lc }, // fundo-lat esq
+    { x1: x0 + Cc, y1: y0, x2: x0 + Cc, y2: y0 + Lc }, // fundo-lat dir
+    { x1: x0, y1: y0 - Hc, x2: x0 + Cc, y2: y0 - Hc }, // frente-tuck
+    { x1: x0, y1: y0 + Lc + Hc, x2: x0 + Cc, y2: y0 + Lc + Hc }, // trás-tampa
+    { x1: x0, y1: y0 + Lc + Hc + Lc, x2: x0 + Cc, y2: y0 + Lc + Hc + Lc }, // tampa-tuck
+    { x1: x0, y1: y0 - Hc, x2: x0, y2: y0 }, // orelha frente esq
+    { x1: x0 + Cc, y1: y0 - Hc, x2: x0 + Cc, y2: y0 }, // orelha frente dir
+    { x1: x0, y1: y0 + Lc, x2: x0, y2: y0 + Lc + Hc }, // orelha trás esq
+    { x1: x0 + Cc, y1: y0 + Lc, x2: x0 + Cc, y2: y0 + Lc + Hc }, // orelha trás dir
+  ];
+
+  return montar(panels, folds);
+}
+
 // Luva / corpo tubular (família 05): 4 painéis, sem abas (aberto nas pontas).
 function dielineLuva(p: ParamsGeometria): Dieline {
   return dielineCaixa(p, 0.0001, 0.0001);
@@ -355,6 +460,9 @@ export function gerarDieline(code: FefcoCode, p: ParamsGeometria): Dieline {
       return dielineTelescopica(p);
     case "luva":
       return dielineLuva(p);
+    case "correio":
+    case "maleta":
+      return dielineCorreio(p);
     case "rsc":
     default:
       return dieline0201(p);

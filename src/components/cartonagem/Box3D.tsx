@@ -92,6 +92,12 @@ export function Box3D({ C, L, H, fluteColor = "#c8a06a", arquetipo = "rsc", clas
               bright={1.12}
             />
           </>
+        ) : arquetipo === "correio" || arquetipo === "maleta" ? (
+          // mailer/maleta: caixa com tampa articulada (aberta no correio, fechada na maleta)
+          <>
+            <Cuboid w={w} d={d} h={h} color={fluteColor} openTop lockBottom />
+            <Tampa w={w} d={d} h={h} color={fluteColor} aberta={arquetipo === "correio"} />
+          </>
         ) : arquetipo === "luva" ? (
           // luva / corpo tubular: aberto nas duas extremidades
           <Cuboid w={w} d={d} h={h} color={fluteColor} openTop openBottom />
@@ -110,6 +116,41 @@ export function Box3D({ C, L, H, fluteColor = "#c8a06a", arquetipo = "rsc", clas
         )}
       </div>
     </div>
+  );
+}
+
+// Tampa articulada na aresta traseira do topo (para correio/maleta).
+function Tampa({
+  w,
+  d,
+  h,
+  color,
+  aberta,
+}: {
+  w: number;
+  d: number;
+  h: number;
+  color: string;
+  aberta: boolean;
+}) {
+  const ang = aberta ? -118 : -6; // graus: aberta inclina para trás; fechada quase deitada
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        width: w,
+        height: d,
+        transformStyle: "preserve-3d",
+        transformOrigin: "50% 0%",
+        transform: `translate(-50%, 0) translateY(${-h / 2}px) translateZ(${-d / 2}px) rotateX(${ang}deg)`,
+        background: color,
+        border: "1px solid rgba(90,60,20,0.5)",
+        boxShadow: "inset 0 0 30px rgba(0,0,0,0.12)",
+        filter: "brightness(1.12)",
+      }}
+    />
   );
 }
 
