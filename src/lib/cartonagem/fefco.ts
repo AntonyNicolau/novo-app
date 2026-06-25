@@ -72,10 +72,10 @@ const FAMILIAS: Record<string, { nome: string; arq: Arquetipo; desc: string }> =
 // Sobrescritas para modelos notáveis (nome amigável, descrição e/ou arquétipo).
 const NOTAVEIS: Record<string, { nome: string; desc?: string; arq?: Arquetipo; hints?: string[] }> = {
   CORREIO: {
-    nome: "Caixa Correio (e-commerce / mailer)",
-    desc: "Caixa de uma peça para envio (Correios/transportadora): fundo, paredes, abas laterais de trava e tampa que dobra e encaixa na frente.",
+    nome: "Caixa Correio / Mailer (FEFCO 0427)",
+    desc: "Caixa de uma peça para envio (Correios/transportadora), estilo FEFCO 0427: fundo, paredes, tampa com abas laterais que travam dentro da caixa (RETT).",
     arq: "correio",
-    hints: ["mailer", "e-commerce", "correio", "sedex", "envio"],
+    hints: ["mailer", "e-commerce", "correio", "sedex", "0427"],
   },
   AMERICANO: {
     nome: "Caixa Fechamento + Fundo Americano (0216)",
@@ -106,7 +106,7 @@ const NOTAVEIS: Record<string, { nome: string; desc?: string; arq?: Arquetipo; h
   "0300": { nome: "Telescópica tampa + fundo", desc: "Fundo (bandeja) e tampa telescópica que encaixa por fora.", hints: ["tampa separada", "telescópica"] },
   "0306": { nome: "Bandeja + tampa telescópica parcial", desc: "Tampa cobre parte da altura do fundo." },
   "0310": { nome: "Tampa telescópica total", desc: "Tampa cobre toda a altura do fundo." },
-  "0427": { nome: "Bandeja fundo automático (PDV)", desc: "Bandeja/expositor de uma folha com travas laterais, montagem rápida. Comum em PDV.", arq: "bandeja", hints: ["bandeja", "expositor", "pdv"] },
+  "0427": { nome: "Caixa Correio / Mailer (RETT)", desc: "Caixa de envio de uma peça: fundo, paredes e tampa com abas laterais que travam dentro da caixa. A clássica caixa correio do e-commerce.", arq: "correio", hints: ["mailer", "correio", "e-commerce", "rett"] },
   "0427B": { nome: "Bandeja com paredes duplas", desc: "Bandeja reforçada com paredes laterais duplas (hortifruti, empilhável).", arq: "bandeja" },
   "0426": { nome: "Bandeja com cantos colados", desc: "Bandeja com cantos colados, paredes firmes." },
   "0470": { nome: "Bandeja de fundo automático", desc: "Bandeja que arma sozinha ao levantar as paredes." },
@@ -477,6 +477,9 @@ function dielineCorreio(p: ParamsGeometria): Dieline {
     { x: x0 + Cc, y: y0 - Hc, w: Hc, h: Hc, label: "" },
     { x: x0 - Hc, y: y0 + Lc, w: Hc, h: Hc, label: "" },
     { x: x0 + Cc, y: y0 + Lc, w: Hc, h: Hc, label: "" },
+    // abas laterais da TAMPA (travam dentro da caixa) — marca do 0427
+    { x: x0 - Hc, y: y0 + Lc + Hc, w: Hc, h: Lc, label: "" },
+    { x: x0 + Cc, y: y0 + Lc + Hc, w: Hc, h: Lc, label: "" },
   ];
 
   const folds: Line[] = [
@@ -491,6 +494,8 @@ function dielineCorreio(p: ParamsGeometria): Dieline {
     { x1: x0 + Cc, y1: y0 - Hc, x2: x0 + Cc, y2: y0 }, // orelha frente dir
     { x1: x0, y1: y0 + Lc, x2: x0, y2: y0 + Lc + Hc }, // orelha trás esq
     { x1: x0 + Cc, y1: y0 + Lc, x2: x0 + Cc, y2: y0 + Lc + Hc }, // orelha trás dir
+    { x1: x0, y1: y0 + Lc + Hc, x2: x0, y2: y0 + Lc + Hc + Lc }, // aba tampa esq
+    { x1: x0 + Cc, y1: y0 + Lc + Hc, x2: x0 + Cc, y2: y0 + Lc + Hc + Lc }, // aba tampa dir
   ];
 
   return montar(panels, folds);
