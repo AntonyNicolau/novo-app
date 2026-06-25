@@ -47,8 +47,8 @@ export interface CustoDetalhado {
   laminaCorte: number;
   laminaVinco: number;
   emborrachamento: number;
-  maoDeObra: number;
-  total: number; // custo total da faca (ferramenta)
+  estrutura: number; // estrutura cilíndrica (apenas faca rotativa); 0 na plana
+  total: number; // custo total da faca (somente ferramental)
 }
 
 export interface OrcamentoResultado {
@@ -71,9 +71,7 @@ export const PRECOS = {
   laminaCorteMetro: 120, // R$/m de lâmina de aço (valor real informado)
   laminaVincoMetro: 120, // R$/m de lâmina de aço (mesma régua, valor real informado)
   emborrachamentoM2: 180, // R$/m² de emborrachamento técnico (expulsor) (referência)
-  maoDeObraPlana: 240, // R$ montagem faca plana (referência)
-  maoDeObraRotativa: 520, // R$ montagem faca rotativa (cilindro) (referência)
-  baseRotativa: 1800, // R$ estrutura cilíndrica base (referência)
+  baseRotativa: 1800, // R$ estrutura cilíndrica base da faca rotativa (referência)
 };
 
 function comprimentoLinhas(linhas: Line[]): number {
@@ -163,16 +161,16 @@ export function calcular(input: OrcamentoInput): OrcamentoResultado {
   const laminaVinco = metragem.vincoMm / 1000 * PRECOS.laminaVincoMetro;
   // Emborrachamento ~30% da área da madeira (faixas de borracha junto às lâminas)
   const emborrachamento = areaMadeira * 0.3 * PRECOS.emborrachamentoM2;
-  const maoDeObra = input.tipoFaca === "rotativa" ? PRECOS.maoDeObraRotativa : PRECOS.maoDeObraPlana;
-  const baseRotativa = input.tipoFaca === "rotativa" ? PRECOS.baseRotativa : 0;
-  const facaTotal = madeira + laminaCorte + laminaVinco + emborrachamento + maoDeObra + baseRotativa;
+  // Somente ferramental (sem mão de obra). A estrutura cilíndrica entra só na rotativa.
+  const estrutura = input.tipoFaca === "rotativa" ? PRECOS.baseRotativa : 0;
+  const facaTotal = madeira + laminaCorte + laminaVinco + emborrachamento + estrutura;
 
   const custo: CustoDetalhado = {
     madeira,
     laminaCorte,
     laminaVinco,
     emborrachamento,
-    maoDeObra: maoDeObra + baseRotativa,
+    estrutura,
     total: facaTotal,
   };
 
