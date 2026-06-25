@@ -32,6 +32,30 @@ usa **Edge Runtime**, compatível com Cloudflare Pages Functions.
 5. **Compatibilidade de runtime:** em *Settings → Functions*, marque a flag
    `nodejs_compat` (necessária para o Next no Cloudflare).
 
+## Autenticação (cadastro e login)
+
+O cadastro de usuários usa **Supabase Auth**. Sem configuração, o app roda em
+**modo demonstração** (contas salvas só no navegador) — útil para testar, mas
+**não use em produção**. Para ativar o cadastro real e seguro:
+
+1. Crie um projeto grátis em <https://supabase.com>.
+2. Em *Project Settings → API*, copie a **Project URL** e a **anon public key**.
+3. Adicione como variáveis de ambiente na Cloudflare Pages:
+
+   | Variável | Valor |
+   |----------|-------|
+   | `NEXT_PUBLIC_SUPABASE_URL` | a *Project URL* |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | a *anon public key* |
+
+4. Em *Supabase → Authentication → Providers*, mantenha **Email** ativo. Para
+   uso interno, deixe **Confirm email** ligado (o usuário confirma por e-mail).
+5. Para restringir quem pode se cadastrar (site interno), use *Authentication →
+   Settings*: desative cadastros abertos e convide usuários, ou combine com o
+   **Cloudflare Access** para um segundo fator de acesso à empresa.
+
+> Quando o projeto virar produto à venda, o Supabase já oferece perfis, papéis
+> (RBAC) e integração com cobrança — base pronta para o modelo SaaS.
+
 ## Segurança (Cloudflare)
 
 - Ative **SSL/TLS Full (strict)** e **Always Use HTTPS**.

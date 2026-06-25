@@ -58,12 +58,20 @@ export default function Home() {
         <div className="flex items-center gap-2 font-bold text-xl">
           <Box className="w-7 h-7 text-amber-400" /> CartoDie
         </div>
-        <Link
-          href="/orcamento"
-          className="rounded-lg bg-amber-500 text-stone-950 px-5 py-2.5 text-sm font-semibold hover:bg-amber-400 transition"
-        >
-          Abrir orçamento
-        </Link>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Link
+            href="/login"
+            className="text-sm font-medium text-stone-300 hover:text-white px-3 py-2"
+          >
+            Entrar
+          </Link>
+          <Link
+            href="/cadastro"
+            className="rounded-lg bg-amber-500 text-stone-950 px-5 py-2.5 text-sm font-semibold hover:bg-amber-400 transition"
+          >
+            Criar conta
+          </Link>
+        </div>
       </header>
 
       {/* Hero */}

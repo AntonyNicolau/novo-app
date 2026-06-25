@@ -22,6 +22,8 @@ import { calcular, brl, TipoFaca } from "@/lib/cartonagem/engine";
 import { gerarDXF, baixarTexto } from "@/lib/cartonagem/dxf";
 import { DielinePreview } from "@/components/cartonagem/DielinePreview";
 import { Box3D } from "@/components/cartonagem/Box3D";
+import { RequireAuth } from "@/components/auth/RequireAuth";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 const fluteCor: Record<FluteId, string> = {
   B: "#c8a06a",
@@ -31,7 +33,7 @@ const fluteCor: Record<FluteId, string> = {
   KRAFT: "#d9c39a",
 };
 
-export default function OrcamentoPage() {
+function OrcamentoTool() {
   const [fefco, setFefco] = useState<FefcoCode>("0201");
   const [C, setC] = useState(300);
   const [L, setL] = useState(200);
@@ -124,9 +126,12 @@ export default function OrcamentoPage() {
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
             <Box className="w-6 h-6 text-amber-400" /> CartoDie
           </Link>
-          <Link href="/" className="text-sm text-stone-300 hover:text-white flex items-center gap-1">
-            <ArrowLeft className="w-4 h-4" /> Início
-          </Link>
+          <div className="flex items-center gap-5">
+            <Link href="/" className="text-sm text-stone-300 hover:text-white flex items-center gap-1">
+              <ArrowLeft className="w-4 h-4" /> Início
+            </Link>
+            <UserMenu />
+          </div>
         </div>
       </header>
 
@@ -384,5 +389,13 @@ function Row({ k, v, bold }: { k: string; v: string; bold?: boolean }) {
       <span className="text-stone-500">{k}</span>
       <span className={bold ? "font-semibold" : ""}>{v}</span>
     </div>
+  );
+}
+
+export default function OrcamentoPage() {
+  return (
+    <RequireAuth>
+      <OrcamentoTool />
+    </RequireAuth>
   );
 }

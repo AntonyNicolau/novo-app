@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/lib/auth/AuthContext";
 
 export const metadata: Metadata = {
   title: "CartoDie — Orçamento de Cartonagem e Papelão Ondulado",
@@ -16,8 +17,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="font-inter antialiased">
-        {children}
-        <Toaster position="top-right" richColors />
+        <AuthProvider>
+          {children}
+          <Toaster position="top-right" richColors />
+        </AuthProvider>
       </body>
     </html>
   );
