@@ -70,13 +70,13 @@ export interface OrcamentoResultado {
 
 // Tabela de preços de referência (ajustável). Valores em R$.
 export const PRECOS = {
-  madeiraLaminadaM2: 320, // R$/m² de madeira laminada 18mm cortada a laser
-  laminaCorteMetro: 9.5, // R$/m de lâmina de corte (aço alto carbono 0,71mm)
-  laminaVincoMetro: 7.8, // R$/m de filete de vinco
-  emborrachamentoM2: 180, // R$/m² de emborrachamento técnico (expulsor)
-  maoDeObraPlana: 240, // R$ montagem faca plana
-  maoDeObraRotativa: 520, // R$ montagem faca rotativa (cilindro)
-  baseRotativa: 1800, // R$ estrutura cilíndrica base
+  madeiraLaminadaM2: 320, // R$/m² de madeira laminada 18mm cortada a laser (referência)
+  laminaCorteMetro: 120, // R$/m de lâmina de aço (valor real informado)
+  laminaVincoMetro: 120, // R$/m de lâmina de aço (mesma régua, valor real informado)
+  emborrachamentoM2: 180, // R$/m² de emborrachamento técnico (expulsor) (referência)
+  maoDeObraPlana: 240, // R$ montagem faca plana (referência)
+  maoDeObraRotativa: 520, // R$ montagem faca rotativa (cilindro) (referência)
+  baseRotativa: 1800, // R$ estrutura cilíndrica base (referência)
 };
 
 function comprimentoLinhas(linhas: Line[]): number {
