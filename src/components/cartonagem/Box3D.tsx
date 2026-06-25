@@ -111,7 +111,7 @@ export function Box3D({ C, L, H, fluteColor = "#c8a06a", arquetipo = "rsc", clas
             h={h}
             color={fluteColor}
             openTop
-            lockBottom={arquetipo === "fundoAutomatico"}
+            lockBottom={arquetipo === "fundoAutomatico" || arquetipo === "fundoAmericano"}
           />
         )}
       </div>

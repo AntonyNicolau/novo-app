@@ -12,7 +12,8 @@ export type Arquetipo =
   | "luva"
   | "rigida"
   | "correio"
-  | "maleta";
+  | "maleta"
+  | "fundoAmericano";
 
 export interface FefcoModel {
   code: FefcoCode;
@@ -77,10 +78,10 @@ const NOTAVEIS: Record<string, { nome: string; desc?: string; arq?: Arquetipo; h
     hints: ["mailer", "e-commerce", "correio", "sedex", "envio"],
   },
   AMERICANO: {
-    nome: "Caixa Fechamento Americano (RSC 0201)",
-    desc: "Caixa de transporte padrão com abas que se encontram no centro, fechada com fita (fechamento americano). É a RSC 0201.",
-    arq: "rsc",
-    hints: ["fechamento americano", "rsc", "caixa de transporte"],
+    nome: "Caixa Fechamento + Fundo Americano (0216)",
+    desc: "Topo com fechamento americano (abas no centro) e fundo automático com trava (abas anguladas que se encaixam, estilo FEFCO 0216).",
+    arq: "fundoAmericano",
+    hints: ["fechamento americano", "fundo americano", "trava", "0216"],
   },
   MALETA: {
     nome: "Caixa Maleta (tampa articulada)",
@@ -101,6 +102,7 @@ const NOTAVEIS: Record<string, { nome: string; desc?: string; arq?: Arquetipo; h
   "0206": { nome: "Full Overlap (FOL) total", desc: "Todas as abas sobrepostas para máxima resistência ao empilhamento." },
   "0209": { nome: "RSC com abas desiguais", desc: "Abas de comprimentos diferentes para ajuste de fechamento." },
   "0215": { nome: "Caixa com fundo automático / autotrava", desc: "Variante com abas de fundo que se sobrepõem totalmente para fundo reforçado.", arq: "fundoAutomatico", hints: ["fundo reforçado", "autotrava"] },
+  "0216": { nome: "Fundo americano (trava automática)", desc: "Topo com fechamento americano (abas no centro) e fundo automático com abas anguladas que se travam.", arq: "fundoAmericano", hints: ["fundo americano", "trava", "crash-lock"] },
   "0300": { nome: "Telescópica tampa + fundo", desc: "Fundo (bandeja) e tampa telescópica que encaixa por fora.", hints: ["tampa separada", "telescópica"] },
   "0306": { nome: "Bandeja + tampa telescópica parcial", desc: "Tampa cobre parte da altura do fundo." },
   "0310": { nome: "Tampa telescópica total", desc: "Tampa cobre toda a altura do fundo." },
@@ -296,6 +298,57 @@ function dielineFundoAutomatico(p: ParamsGeometria): Dieline {
   return dielineCaixa(p, Lc, aba);
 }
 
+// Fundo americano / trava automática (0216): topo com abas RSC (encontram no
+// centro) e fundo com abas anguladas que se encaixam (crash-lock).
+function dielineFundoAmericano(p: ParamsGeometria): Dieline {
+  const { Cc, Lc, Hc, aba, abaCola } = compensar(p);
+  const larguraTotal = abaCola + 2 * Cc + 2 * Lc;
+  const bd = aba; // profundidade do fundo
+  const yBody = bd;
+  const yTop = bd + Hc;
+  const alturaTotal = bd + Hc + aba;
+
+  const cut: Line[] = [];
+  const crease: Line[] = [];
+  const panels: Rect[] = [];
+
+  const panelXs = [abaCola, abaCola + Cc, abaCola + Cc + Lc, abaCola + Cc + Lc + Cc];
+  const panelWs = [Cc, Lc, Cc, Lc];
+  const labels = ["L", "W", "L", "W"];
+
+  // bordas laterais do corpo + aba de cola
+  cut.push({ x1: 0, y1: yBody, x2: 0, y2: yTop });
+  cut.push({ x1: larguraTotal, y1: yBody, x2: larguraTotal, y2: yTop });
+  panels.push({ x: 0, y: yBody, w: abaCola, h: Hc, label: "cola" });
+
+  // vincos verticais entre painéis
+  [abaCola, abaCola + Cc, abaCola + Cc + Lc, abaCola + Cc + Lc + Cc].forEach((x) =>
+    crease.push({ x1: x, y1: yBody, x2: x, y2: yTop })
+  );
+  // dobras horizontais (fundo e topo)
+  crease.push({ x1: abaCola, y1: yBody, x2: larguraTotal, y2: yBody });
+  crease.push({ x1: abaCola, y1: yTop, x2: larguraTotal, y2: yTop });
+
+  panelXs.forEach((px, i) => {
+    const pw = panelWs[i];
+    // topo: aba RSC (retangular, meia-largura)
+    cut.push({ x1: px, y1: alturaTotal, x2: px + pw, y2: alturaTotal });
+    cut.push({ x1: px, y1: yTop, x2: px, y2: alturaTotal });
+    cut.push({ x1: px + pw, y1: yTop, x2: px + pw, y2: alturaTotal });
+    panels.push({ x: px, y: yBody, w: pw, h: Hc, label: labels[i] });
+
+    // fundo: aba angulada (trapézio) com vincos diagonais de trava
+    const inset = pw * 0.16;
+    cut.push({ x1: px, y1: yBody, x2: px + inset, y2: 0 });
+    cut.push({ x1: px + inset, y1: 0, x2: px + pw - inset, y2: 0 });
+    cut.push({ x1: px + pw - inset, y1: 0, x2: px + pw, y2: yBody });
+    crease.push({ x1: px, y1: yBody, x2: px + pw / 2, y2: 0 });
+    crease.push({ x1: px + pw, y1: yBody, x2: px + pw / 2, y2: 0 });
+  });
+
+  return { largura: larguraTotal, altura: alturaTotal, cut, crease, panels };
+}
+
 // Bandeja de uma folha (família 04, ex. 0427) — aproximação paramétrica:
 // fundo C x L com 4 paredes de altura H e abas de canto.
 function dielineBandeja(p: ParamsGeometria): Dieline {
@@ -453,6 +506,8 @@ export function gerarDieline(code: FefcoCode, p: ParamsGeometria): Dieline {
   switch (getArquetipo(code)) {
     case "fundoAutomatico":
       return dielineFundoAutomatico(p);
+    case "fundoAmericano":
+      return dielineFundoAmericano(p);
     case "bandeja":
       return dielineBandeja(p);
     case "telescopica":
