@@ -77,3 +77,6 @@ create policy "orcamentos_proprios" on public.orcamentos
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Segurança: a função do gatilho não precisa ser chamável via API (RPC).
+revoke execute on function public.handle_new_user() from anon, authenticated, public;
