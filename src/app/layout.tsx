@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
-import { FirebaseConfigBanner } from "@/components/FirebaseConfigBanner";
 
 export const metadata: Metadata = {
-  title: "AnaliseRoyale - Análise de Decks Clash Royale",
-  description: "Analise seu deck e aumente suas vitórias com IA",
+  title: "CartoDie — Orçamento de Cartonagem e Papelão Ondulado",
+  description:
+    "Plataforma Web-to-Die: reconhecimento FEFCO por IA, compensação de vinco, metragem de lâmina, preview 3D, DXF industrial e proposta em PDF.",
 };
 
 export default function RootLayout({
@@ -17,11 +16,8 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="font-inter antialiased">
-        <FirebaseConfigBanner />
-        <AuthProvider>
-          {children}
-          <Toaster position="top-right" richColors />
-        </AuthProvider>
+        {children}
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

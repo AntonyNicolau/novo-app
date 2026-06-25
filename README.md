@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CartoDie — Plataforma Web-to-Die de Cartonagem
 
-## Getting Started
+Sistema de orçamento instantâneo e geração de projetos para **cartonagem e
+papelão ondulado**, seguindo padrões industriais (FEFCO, compensação de vinco,
+faca plana/rotativa, kerf, DXF).
 
-First, run the development server:
+## Recursos
+
+1. **Entrada e Reconhecimento (IA Vision)**
+   - Upload de **foto** → IA sugere a estrutura FEFCO (0201, 0427, 0215, 0300…).
+   - Upload de **vetores** DXF/AI/PDF para projetos personalizados.
+   - Seleção manual na biblioteca FEFCO.
+2. **Medidas e material**
+   - Dimensões internas **C × L × H em mm** (obrigatórias, nesta ordem).
+   - Onda **B, C, E, BC (dupla)** ou **Kraft**, com faixa de espessura.
+   - Aviso e campo para **espessura real medida com paquímetro**.
+3. **Inteligência de cálculo**
+   - **Compensação de vinco** automática (acréscimos lineares pela espessura).
+   - **Metragem de lâmina** de corte e vinco (em metros).
+   - **Margens de segurança**: 10mm de sangria, 5mm dos vincos.
+4. **Especificação da faca**
+   - Faca **plana** (madeira 18mm, lâmina 23,8mm) ou **rotativa** (cilindro).
+   - Lâmina de aço alto carbono 0,71mm + emborrachamento técnico no custo.
+   - **Compensação de kerf** do laser (0,1–0,2mm).
+5. **Visualização e saída**
+   - **Preview 3D** da caixa dobrada (arraste para girar).
+   - Desenho da **faca (dieline)** em SVG: corte (vermelho) e vinco (azul).
+   - **Proposta em PDF** instantânea (impressão do navegador).
+   - **Exportação DXF** com camadas CORTE/VINCO em mm.
+
+## Estrutura do código
+
+| Caminho | Função |
+|---------|--------|
+| `src/lib/cartonagem/fefco.ts` | Catálogo FEFCO + geração de geometria (dieline) |
+| `src/lib/cartonagem/flutes.ts` | Ondas/materiais e espessuras |
+| `src/lib/cartonagem/engine.ts` | Compensações, metragem, faca, kerf e custos |
+| `src/lib/cartonagem/dxf.ts` | Exportador DXF industrial |
+| `src/components/cartonagem/DielinePreview.tsx` | Preview 2D da faca (SVG) |
+| `src/components/cartonagem/Box3D.tsx` | Preview 3D da caixa (CSS 3D) |
+| `src/app/orcamento/page.tsx` | Ferramenta de orçamento |
+| `src/app/api/vision/route.ts` | IA Vision (OpenAI + fallback) |
+
+## Desenvolvimento
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # build de produção
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deploy
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Hospedagem na **Cloudflare Pages** — ver [`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> Os preços em `engine.ts` (`PRECOS`) são valores de referência e devem ser
+> ajustados à sua realidade de custos.
