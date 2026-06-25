@@ -1,0 +1,17 @@
+{
+  "name": "whatsapp-monitor-connector",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Conector WhatsApp (Baileys) — apenas observa: lê QR, escuta mensagens/presença e grava no Supabase.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.48.1",
+    "@whiskeysockets/baileys": "^6.7.9",
+    "dotenv": "^16.4.5",
+    "pino": "^9.5.0"
+  }
+}
