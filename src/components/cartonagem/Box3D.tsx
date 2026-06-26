@@ -92,11 +92,17 @@ export function Box3D({ C, L, H, fluteColor = "#c8a06a", arquetipo = "rsc", clas
               bright={1.12}
             />
           </>
-        ) : arquetipo === "correio" || arquetipo === "maleta" ? (
-          // mailer/maleta: caixa com tampa articulada (aberta no correio, fechada na maleta)
+        ) : arquetipo === "correio" ? (
+          // mailer: caixa com tampa articulada aberta
           <>
             <Cuboid w={w} d={d} h={h} color={fluteColor} openTop lockBottom />
-            <Tampa w={w} d={d} h={h} color={fluteColor} aberta={arquetipo === "correio"} />
+            <Tampa w={w} d={d} h={h} color={fluteColor} aberta />
+          </>
+        ) : arquetipo === "maleta" ? (
+          // maleta com alça: caixa fechada + alça no topo
+          <>
+            <Cuboid w={w} d={d} h={h} color={fluteColor} seamTop lockBottom />
+            <Alca w={w} h={h} color={fluteColor} />
           </>
         ) : arquetipo === "luva" ? (
           // luva / corpo tubular: aberto nas duas extremidades
@@ -151,6 +157,41 @@ function Tampa({
         filter: "brightness(1.12)",
       }}
     />
+  );
+}
+
+// Alça (gable box): painel vertical no topo com furo oval.
+function Alca({ w, h, color }: { w: number; h: number; color: string }) {
+  const hw = w * 0.5;
+  const hh = h * 0.5;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        width: hw,
+        height: hh,
+        transform: `translate(-50%, -50%) translateY(${-h / 2 - hh / 2}px)`,
+        background: color,
+        border: "1px solid rgba(90,60,20,0.5)",
+        boxShadow: "inset 0 0 20px rgba(0,0,0,0.12)",
+        filter: "brightness(1.06)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "46%",
+          height: "30%",
+          borderRadius: "999px",
+          background: "#f7f4ee",
+          boxShadow: "inset 0 0 0 2px rgba(90,60,20,0.45)",
+        }}
+      />
+    </div>
   );
 }
 

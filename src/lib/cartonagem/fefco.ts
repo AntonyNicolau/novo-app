@@ -84,10 +84,10 @@ const NOTAVEIS: Record<string, { nome: string; desc?: string; arq?: Arquetipo; h
     hints: ["fechamento americano", "fundo americano", "trava", "0216"],
   },
   MALETA: {
-    nome: "Caixa Maleta (tampa articulada)",
-    desc: "Caixa de uma peça que monta como uma maleta: fundo com paredes e tampa articulada que fecha por cima com trava frontal.",
+    nome: "Caixa Maleta com Alça (gable box)",
+    desc: "Caixa de uma peça com topo em duas águas e alça (furo oval) e fundo automático de trava. Usada para transporte de alimentos, presentes e kits.",
     arq: "maleta",
-    hints: ["maleta", "estojo", "tampa", "alça"],
+    hints: ["maleta", "alça", "gable", "transporte"],
   },
   "0201": {
     nome: "Caixa Maleta (RSC)",
@@ -501,6 +501,80 @@ function dielineCorreio(p: ParamsGeometria): Dieline {
   return montar(panels, folds);
 }
 
+// Aproxima uma elipse (furo da alça) por segmentos de reta.
+function elipse(cx: number, cy: number, rx: number, ry: number, n = 22): Line[] {
+  const out: Line[] = [];
+  let px = 0, py = 0;
+  for (let k = 0; k <= n; k++) {
+    const a = (2 * Math.PI * k) / n;
+    const x = cx + rx * Math.cos(a);
+    const y = cy + ry * Math.sin(a);
+    if (k > 0) out.push({ x1: px, y1: py, x2: x, y2: y });
+    px = x;
+    py = y;
+  }
+  return out;
+}
+
+// Caixa maleta com alça (gable box): topo em duas águas com painel de alça
+// (furo oval) e fundo automático com trava. Modelo para envio/transporte.
+function dielineMaleta(p: ParamsGeometria): Dieline {
+  const { Cc, Lc, Hc, aba, abaCola } = compensar(p);
+  const larguraTotal = abaCola + 2 * Cc + 2 * Lc;
+  const bd = aba; // profundidade do fundo (trava)
+  const gableH = Lc * 0.85; // altura do painel de alça / gablé
+  const yBody = bd;
+  const yTop = bd + Hc;
+  const topEnd = yTop + gableH;
+  const alturaTotal = topEnd;
+
+  const cut: Line[] = [];
+  const crease: Line[] = [];
+  const panels: Rect[] = [];
+
+  const panelXs = [abaCola, abaCola + Cc, abaCola + Cc + Lc, abaCola + Cc + Lc + Cc];
+  const panelWs = [Cc, Lc, Cc, Lc];
+  const labels = ["L", "W", "L", "W"];
+
+  cut.push({ x1: 0, y1: yBody, x2: 0, y2: yTop });
+  cut.push({ x1: larguraTotal, y1: yBody, x2: larguraTotal, y2: yTop });
+  panels.push({ x: 0, y: yBody, w: abaCola, h: Hc, label: "cola" });
+  panelXs.forEach((x) => crease.push({ x1: x, y1: yBody, x2: x, y2: yTop }));
+  crease.push({ x1: abaCola, y1: yBody, x2: larguraTotal, y2: yBody });
+  crease.push({ x1: abaCola, y1: yTop, x2: larguraTotal, y2: yTop });
+
+  panelXs.forEach((px, i) => {
+    const pw = panelWs[i];
+    panels.push({ x: px, y: yBody, w: pw, h: Hc, label: labels[i] });
+
+    if (i % 2 === 0) {
+      // painel de alça (nas faces L): retângulo alto com furo oval
+      cut.push({ x1: px, y1: topEnd, x2: px + pw, y2: topEnd });
+      cut.push({ x1: px, y1: yTop, x2: px, y2: topEnd });
+      cut.push({ x1: px + pw, y1: yTop, x2: px + pw, y2: topEnd });
+      elipse(px + pw / 2, yTop + gableH * 0.74, pw * 0.24, gableH * 0.09).forEach((l) => cut.push(l));
+    } else {
+      // gusset (nas faces W): dobras diagonais + vinco central (dobra para dentro)
+      cut.push({ x1: px, y1: topEnd, x2: px + pw, y2: topEnd });
+      cut.push({ x1: px, y1: yTop, x2: px, y2: topEnd });
+      cut.push({ x1: px + pw, y1: yTop, x2: px + pw, y2: topEnd });
+      crease.push({ x1: px, y1: yTop, x2: px + pw / 2, y2: topEnd });
+      crease.push({ x1: px + pw, y1: yTop, x2: px + pw / 2, y2: topEnd });
+      crease.push({ x1: px + pw / 2, y1: yTop, x2: px + pw / 2, y2: topEnd });
+    }
+
+    // fundo automático (trava) — abas anguladas
+    const inset = pw * 0.16;
+    cut.push({ x1: px, y1: yBody, x2: px + inset, y2: 0 });
+    cut.push({ x1: px + inset, y1: 0, x2: px + pw - inset, y2: 0 });
+    cut.push({ x1: px + pw - inset, y1: 0, x2: px + pw, y2: yBody });
+    crease.push({ x1: px, y1: yBody, x2: px + pw / 2, y2: 0 });
+    crease.push({ x1: px + pw, y1: yBody, x2: px + pw / 2, y2: 0 });
+  });
+
+  return { largura: larguraTotal, altura: alturaTotal, cut, crease, panels };
+}
+
 // Luva / corpo tubular (família 05): 4 painéis, sem abas (aberto nas pontas).
 function dielineLuva(p: ParamsGeometria): Dieline {
   return dielineCaixa(p, 0.0001, 0.0001);
@@ -521,8 +595,9 @@ export function gerarDieline(code: FefcoCode, p: ParamsGeometria): Dieline {
     case "luva":
       return dielineLuva(p);
     case "correio":
-    case "maleta":
       return dielineCorreio(p);
+    case "maleta":
+      return dielineMaleta(p);
     case "rsc":
     default:
       return dieline0201(p);
