@@ -84,10 +84,10 @@ const NOTAVEIS: Record<string, { nome: string; desc?: string; arq?: Arquetipo; h
     hints: ["fechamento americano", "fundo americano", "trava", "0216"],
   },
   MALETA: {
-    nome: "Caixa Maleta com Alça (gable box)",
-    desc: "Caixa de uma peça com topo em duas águas e alça (furo oval) e fundo automático de trava. Usada para transporte de alimentos, presentes e kits.",
+    nome: "Caixa Maleta com Alça (FEFCO 0217)",
+    desc: "Caixa de uma peça com topo em duas águas e alça (furo oval) e fundo automático de trava (FEFCO 0217). Usada para transporte de alimentos, presentes e kits.",
     arq: "maleta",
-    hints: ["maleta", "alça", "gable", "transporte"],
+    hints: ["maleta", "alça", "gable", "0217", "transporte"],
   },
   "0201": {
     nome: "Caixa Maleta (RSC)",
@@ -103,6 +103,7 @@ const NOTAVEIS: Record<string, { nome: string; desc?: string; arq?: Arquetipo; h
   "0209": { nome: "RSC com abas desiguais", desc: "Abas de comprimentos diferentes para ajuste de fechamento." },
   "0215": { nome: "Caixa com fundo automático / autotrava", desc: "Variante com abas de fundo que se sobrepõem totalmente para fundo reforçado.", arq: "fundoAutomatico", hints: ["fundo reforçado", "autotrava"] },
   "0216": { nome: "Fundo americano (trava automática)", desc: "Topo com fechamento americano (abas no centro) e fundo automático com abas anguladas que se travam.", arq: "fundoAmericano", hints: ["fundo americano", "trava", "crash-lock"] },
+  "0217": { nome: "Caixa Maleta com alça (0217)", desc: "Topo em duas águas com painel de alça (furo oval) e fundo automático de trava. A clássica caixa maleta de transporte.", arq: "maleta", hints: ["maleta", "alça", "gable", "0217"] },
   "0300": { nome: "Telescópica tampa + fundo", desc: "Fundo (bandeja) e tampa telescópica que encaixa por fora.", hints: ["tampa separada", "telescópica"] },
   "0306": { nome: "Bandeja + tampa telescópica parcial", desc: "Tampa cobre parte da altura do fundo." },
   "0310": { nome: "Tampa telescópica total", desc: "Tampa cobre toda a altura do fundo." },

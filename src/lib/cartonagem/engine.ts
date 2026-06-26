@@ -47,7 +47,6 @@ export interface CustoDetalhado {
   laminaCorte: number;
   laminaVinco: number;
   emborrachamento: number;
-  estrutura: number; // estrutura cilíndrica (apenas faca rotativa); 0 na plana
   total: number; // custo total da faca (somente ferramental)
 }
 
@@ -71,7 +70,6 @@ export const PRECOS = {
   laminaCorteMetro: 120, // R$/m de lâmina de aço (valor real informado)
   laminaVincoMetro: 120, // R$/m de lâmina de aço (mesma régua, valor real informado)
   emborrachamentoM2: 180, // R$/m² de emborrachamento técnico (expulsor) (referência)
-  baseRotativa: 1800, // R$ estrutura cilíndrica base da faca rotativa (referência)
 };
 
 function comprimentoLinhas(linhas: Line[]): number {
@@ -161,16 +159,15 @@ export function calcular(input: OrcamentoInput): OrcamentoResultado {
   const laminaVinco = metragem.vincoMm / 1000 * PRECOS.laminaVincoMetro;
   // Emborrachamento ~30% da área da madeira (faixas de borracha junto às lâminas)
   const emborrachamento = areaMadeira * 0.3 * PRECOS.emborrachamentoM2;
-  // Somente ferramental (sem mão de obra). A estrutura cilíndrica entra só na rotativa.
-  const estrutura = input.tipoFaca === "rotativa" ? PRECOS.baseRotativa : 0;
-  const facaTotal = madeira + laminaCorte + laminaVinco + emborrachamento + estrutura;
+  // Somente ferramental: madeira + lâminas + emborrachamento (sem mão de obra
+  // e sem estrutura de cilindro, inclusive na faca rotativa).
+  const facaTotal = madeira + laminaCorte + laminaVinco + emborrachamento;
 
   const custo: CustoDetalhado = {
     madeira,
     laminaCorte,
     laminaVinco,
     emborrachamento,
-    estrutura,
     total: facaTotal,
   };
 

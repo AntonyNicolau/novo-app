@@ -482,7 +482,6 @@ function OrcamentoTool() {
               <Row k="Lâmina de corte" v={brl(c.laminaCorte)} />
               <Row k="Lâmina de vinco" v={brl(c.laminaVinco)} />
               <Row k="Emborrachamento técnico" v={brl(c.emborrachamento)} />
-              {c.estrutura > 0 && <Row k="Estrutura cilíndrica" v={brl(c.estrutura)} />}
             </div>
             <div className="border-t border-stone-200 mt-4 pt-4 flex items-center justify-between">
               <span className="font-bold text-lg">Total da faca</span>
